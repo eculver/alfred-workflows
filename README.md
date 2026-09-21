@@ -84,6 +84,11 @@ still parse, bundle ids and keywords that do not collide across workflows, a
 README table that still mentions every workflow, and a per-workflow README with
 the expected heading and sections.
 
+It also lints the `readme` field inside each `info.plist`, which Alfred renders
+as Markdown in the workflow pane: lines indented one to three spaces get
+reflowed into a run-on paragraph, and underscores outside a code span render as
+emphasis, so `sfc_base_image` would appear as *sfc*base*image*.
+
 The tests run a workflow's script filter the way Alfred does — bash, query split
 into argv, configuration supplied as environment variables — and assert on the
 Alfred JSON it returns.

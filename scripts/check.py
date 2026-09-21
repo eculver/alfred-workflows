@@ -51,6 +51,49 @@ def check_embedded_scripts(slug, obj):
             fail(slug, "embedded script has a syntax error on line %s: %s" % (exc.lineno, exc.msg))
 
 
+def check_alfred_readme(slug, plist):
+    """Alfred renders the readme field as Markdown in the workflow pane.
+
+    Two mistakes render badly and are easy to make when writing it as if it
+    were plain text: example lines indented by only one to three spaces get
+    reflowed into a run-on paragraph, and underscores in prose are read as
+    emphasis, so sfc_base_image shows up as sfc<i>base</i>image.
+    """
+    readme = plist.get("readme") or ""
+    if not readme.strip():
+        fail(slug, "info.plist has no readme for the Alfred workflow pane")
+        return
+
+    in_fence = False
+    in_list = False
+    for number, line in enumerate(readme.splitlines(), 1):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence or line.startswith("    "):
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        # Indented lines under a list item are continuations, not mistakes.
+        if re.match(r"\s*([-*+]|\d+\.)\s", line):
+            in_list = True
+        elif line.strip() and indent == 0:
+            in_list = False
+        if 1 <= indent <= 3 and line.strip() and not in_list:
+            fail(
+                slug,
+                "readme line %d is indented %d space(s); Markdown reflows that "
+                "into the previous paragraph. Indent 4 spaces for a code block." % (number, indent),
+            )
+        # Underscores outside a code span become emphasis when rendered.
+        without_code = re.sub(r"`[^`]*`", "", line)
+        if "_" in without_code:
+            fail(
+                slug,
+                "readme line %d has an underscore outside a code span; Markdown "
+                "renders it as emphasis. Wrap it in backticks or a code block." % number,
+            )
+
+
 def check_workflow(slug, plist):
     for key in REQUIRED_KEYS:
         if not plist.get(key):
@@ -88,6 +131,8 @@ def check_workflow(slug, plist):
     missing_pos = uids - set(plist.get("uidata", {}))
     if missing_pos:
         notes.append("%s: %d object(s) have no canvas position" % (slug, len(missing_pos)))
+
+    check_alfred_readme(slug, plist)
 
     readme = WORKFLOWS / slug / "README.md"
     if not readme.is_file():
