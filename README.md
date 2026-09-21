@@ -14,6 +14,7 @@ pane in Alfred Preferences — nothing sensitive is stored in this repo.
 | Workflow | Keyword | Description |
 | --- | --- | --- |
 | Linear Issue | `li` | Look up a Linear issue by ID (`li ENG-123`) or full-text search, with a live preview. Enter opens in the browser, Cmd+Enter opens in Linear.app. Requires a Linear API key. |
+| GitHub Pull Request | `gh` | Jump to a pull request: `gh 1234`, `gh 1234 sfc_base_image`, or `gh 1234 eculver/foo`. A bare repo name is qualified with the default repository's owner. Configurable default repository. |
 
 ## Editing
 
