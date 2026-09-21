@@ -89,6 +89,17 @@ def check_workflow(slug, plist):
     if missing_pos:
         notes.append("%s: %d object(s) have no canvas position" % (slug, len(missing_pos)))
 
+    readme = WORKFLOWS / slug / "README.md"
+    if not readme.is_file():
+        fail(slug, "has no README.md documenting the workflow")
+    else:
+        text = readme.read_text()
+        if plist.get("name") and not text.lstrip().startswith("# %s" % plist["name"]):
+            fail(slug, "README.md should open with a '# %s' heading" % plist["name"])
+        for section in ("## Installation", "## Usage", "## Configuration"):
+            if section not in text:
+                fail(slug, "README.md is missing a %s section" % section)
+
     for item in plist.get("userconfigurationconfig", []):
         if not item.get("variable"):
             fail(slug, "a user configuration entry has no variable name")
