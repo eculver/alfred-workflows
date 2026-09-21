@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.eculver.linear-issue</string>
+	<key>connections</key>
+	<dict>
+		<key>A1B2C3D4-0001-4000-8000-000000000001</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>A1B2C3D4-0002-4000-8000-000000000002</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>A1B2C3D4-0002-4000-8000-000000000002</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string>Open in Linear.app</string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>Evan Culver</string>
+	<key>description</key>
+	<string>Open Linear issues with a live preview (li &lt;issue-id or search&gt;)</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Linear Issue</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>li</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<false/>
+				<key>queuedelaymode</key>
+				<integer>2</integer>
+				<key>queuemode</key>
+				<integer>2</integer>
+				<key>runningsubtext</key>
+				<string>Searching Linear…</string>
+				<key>script</key>
+				<string>/usr/bin/python3 - "$1" &lt;&lt;'PYEOF'
+import json, os, re, sys, urllib.request
+
+query = (sys.argv[1] if len(sys.argv) &gt; 1 else "").strip()
+api_key = os.environ.get("LINEAR_API_KEY", "").strip()
+
+def out(items):
+    print(json.dumps({"items": items}))
+    sys.exit(0)
+
+if not api_key:
+    out([{
+        "title": "Linear API key not set",
+        "subtitle": "Open workflow Configuration in Alfred and paste a personal API key (linear.app/settings/account/security)",
+        "valid": False,
+    }])
+
+if len(query) &lt; 2:
+    out([{
+        "title": "Open a Linear issue",
+        "subtitle": "Type an issue ID (e.g. ENG-123) or search terms",
+        "valid": False,
+    }])
+
+def gql(q, variables):
+    req = urllib.request.Request(
+        "https://api.linear.app/graphql",
+        data=json.dumps({"query": q, "variables": variables}).encode(),
+        headers={"Content-Type": "application/json", "Authorization": api_key},
+    )
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read())
+
+FIELDS = "identifier title url state { name } assignee { displayName } priorityLabel project { name }"
+
+issues = []
+try:
+    # Fast path: exact issue identifier
+    if re.fullmatch(r"[A-Za-z0-9]+-\d+", query):
+        try:
+            data = gql("query($id: String!) { issue(id: $id) { %s } }" % FIELDS,
+                       {"id": query.upper()})
+            issue = (data.get("data") or {}).get("issue")
+            if issue:
+                issues = [issue]
+        except Exception:
+            pass
+    if not issues:
+        data = gql("query($q: String!) { searchIssues(term: $q, first: 8) { nodes { %s } } }" % FIELDS,
+                   {"q": query})
+        issues = ((data.get("data") or {}).get("searchIssues") or {}).get("nodes") or []
+except Exception as e:
+    out([{"title": "Linear request failed", "subtitle": str(e), "valid": False}])
+
+items = []
+for i in issues:
+    state = (i.get("state") or {}).get("name") or ""
+    assignee = (i.get("assignee") or {}).get("displayName") or "Unassigned"
+    prio = i.get("priorityLabel") or ""
+    project = (i.get("project") or {}).get("name") or ""
+    subtitle = " · ".join(x for x in [state, assignee, prio, project] if x)
+    url = i["url"]
+    items.append({
+        "uid": i["identifier"],
+        "title": "%s  %s" % (i["identifier"], i["title"]),
+        "subtitle": subtitle,
+        "arg": url,
+        "autocomplete": i["identifier"],
+        "quicklookurl": url,
+        "text": {"copy": url, "largetype": "%s\n%s\n%s" % (i["identifier"], i["title"], subtitle)},
+        "mods": {
+            "cmd": {
+                "arg": url.replace("https://linear.app/", "linear://"),
+                "subtitle": "Open in Linear.app",
+            }
+        },
+    })
+
+if not items:
+    items = [{"title": "No issues matching '%s'" % query, "valid": False}]
+out(items)
+PYEOF</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Type an issue ID (ENG-123) or search terms</string>
+				<key>title</key>
+				<string>Open Linear issue</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>A1B2C3D4-0001-4000-8000-000000000001</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<true/>
+				<key>skipvarencode</key>
+				<true/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string>{query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>A1B2C3D4-0002-4000-8000-000000000002</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>Setup:
+1. Create a personal API key at linear.app/settings/account/security
+2. Open this workflow's Configuration in Alfred and paste the key.
+
+Usage:
+  li ENG-123      exact issue lookup
+  li billing bug  full-text search (top 8 results)
+
+Enter opens in browser. Cmd+Enter opens in the Linear desktop app. Shift = Quick Look.</string>
+	<key>uidata</key>
+	<dict>
+		<key>A1B2C3D4-0001-4000-8000-000000000001</key>
+		<dict>
+			<key>xpos</key>
+			<integer>60</integer>
+			<key>ypos</key>
+			<integer>120</integer>
+		</dict>
+		<key>A1B2C3D4-0002-4000-8000-000000000002</key>
+		<dict>
+			<key>xpos</key>
+			<integer>320</integer>
+			<key>ypos</key>
+			<integer>120</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>lin_api_…</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Personal API key from linear.app/settings/account/security</string>
+			<key>label</key>
+			<string>Linear API Key</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>LINEAR_API_KEY</string>
+		</dict>
+	</array>
+	<key>variablesdontexport</key>
+	<array/>
+	<key>version</key>
+	<string>1.0.0</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.eculver.github-pull-request</string>
+	<key>connections</key>
+	<dict>
+		<key>B1C2D3E4-0001-4000-8000-000000000001</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B1C2D3E4-0002-4000-8000-000000000002</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>B1C2D3E4-0002-4000-8000-000000000002</string>
+				<key>modifiers</key>
+				<integer>1048576</integer>
+				<key>modifiersubtext</key>
+				<string>Open the Files changed tab</string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>B1C2D3E4-0002-4000-8000-000000000002</string>
+				<key>modifiers</key>
+				<integer>524288</integer>
+				<key>modifiersubtext</key>
+				<string>Open all pull requests</string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>Evan Culver</string>
+	<key>description</key>
+	<string>Jump to a GitHub pull request (gh &lt;number&gt; [&lt;repo&gt;])</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>GitHub Pull Request</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>gh</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>2</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>/usr/bin/python3 - "$1" "$2" &lt;&lt;'PYEOF'
+import json, os, re, sys
+
+query = " ".join(sys.argv[1:]).strip()
+default_repo = (os.environ.get("DEFAULT_REPO") or "").strip().strip("/")
+
+def out(items):
+    print(json.dumps({"items": items}))
+    sys.exit(0)
+
+def hint(title, subtitle):
+    out([{"title": title, "subtitle": subtitle, "valid": False}])
+
+if "/" not in default_repo:
+    hint("Default repository is not set correctly",
+         "Open this workflow's Configuration in Alfred and set it to owner/repo (e.g. sfcompute/sfcompute)")
+
+default_org = default_repo.split("/", 1)[0]
+
+parts = query.split()
+if not parts:
+    hint("Open a GitHub pull request",
+         "gh &lt;number&gt; [&lt;repo&gt;]   — defaults to %s" % default_repo)
+
+number = parts[0].lstrip("#")
+if not number.isdigit():
+    hint("'%s' is not a pull request number" % parts[0],
+         "gh &lt;number&gt; [&lt;repo&gt;]   — defaults to %s" % default_repo)
+
+if len(parts) == 1:
+    repo = default_repo
+    source = "default repository"
+else:
+    given = parts[1].strip("/")
+    segments = [s for s in given.split("/") if s]
+    if len(segments) == 1:
+        repo = "%s/%s" % (default_org, segments[0])
+        source = "default organization %s" % default_org
+    elif len(segments) == 2:
+        repo = "/".join(segments)
+        source = "explicit repository"
+    else:
+        hint("'%s' is not a valid repository" % parts[1],
+             "Use &lt;repo&gt; or &lt;owner&gt;/&lt;repo&gt;")
+
+if not re.fullmatch(r"[A-Za-z0-9._-]+/[A-Za-z0-9._-]+", repo):
+    hint("'%s' is not a valid repository" % repo, "Use &lt;repo&gt; or &lt;owner&gt;/&lt;repo&gt;")
+
+url = "https://github.com/%s/pull/%s" % (repo, number)
+
+out([{
+    "uid": "%s#%s" % (repo, number),
+    "title": "%s #%s" % (repo, number),
+    "subtitle": "%s  —  %s" % (url, source),
+    "arg": url,
+    "quicklookurl": url,
+    "text": {"copy": url, "largetype": url},
+    "mods": {
+        "cmd": {"arg": url + "/files", "subtitle": "Open the Files changed tab"},
+        "alt": {"arg": "https://github.com/%s/pulls" % repo,
+                "subtitle": "Open all pull requests for %s" % repo},
+    },
+}])
+PYEOF</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>gh &lt;number&gt; [&lt;repo&gt;]</string>
+				<key>title</key>
+				<string>Open GitHub pull request</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>B1C2D3E4-0001-4000-8000-000000000001</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<true/>
+				<key>skipvarencode</key>
+				<true/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string>{query}</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>B1C2D3E4-0002-4000-8000-000000000002</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>Usage:
+  gh 1234                    https://github.com/sfcompute/sfcompute/pull/1234
+  gh 1234 sfc_base_image     https://github.com/sfcompute/sfc_base_image/pull/1234
+  gh 1234 eculver/foo        https://github.com/eculver/foo/pull/1234
+
+With no repo, the configured Default Repository is used. A bare repo name is
+qualified with the owner of the Default Repository. An owner/repo argument is
+used as-is.
+
+Enter opens the pull request. Cmd+Enter opens its Files changed tab.
+Option+Enter opens the repo's pull request list. Cmd+C copies the URL.
+
+Set the Default Repository in this workflow's Configuration.</string>
+	<key>uidata</key>
+	<dict>
+		<key>B1C2D3E4-0001-4000-8000-000000000001</key>
+		<dict>
+			<key>xpos</key>
+			<integer>60</integer>
+			<key>ypos</key>
+			<integer>120</integer>
+		</dict>
+		<key>B1C2D3E4-0002-4000-8000-000000000002</key>
+		<dict>
+			<key>xpos</key>
+			<integer>320</integer>
+			<key>ypos</key>
+			<integer>120</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>sfcompute/sfcompute</string>
+				<key>placeholder</key>
+				<string>owner/repo</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Used when no repo is given. Its owner is also the default organization for a bare repo name.</string>
+			<key>label</key>
+			<string>Default Repository</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>DEFAULT_REPO</string>
+		</dict>
+	</array>
+	<key>variablesdontexport</key>
+	<array/>
+	<key>version</key>
+	<string>1.0.0</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
