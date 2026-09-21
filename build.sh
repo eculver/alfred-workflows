@@ -31,7 +31,7 @@ for slug in "${targets[@]}"; do
     exit 1
   fi
 
-  # Validate, and read the display name that the built file is named after.
+  # Validate, and read the display name for the build log.
   name="$(
     python3 - "$plist" <<'PY'
 import plistlib, sys
@@ -44,10 +44,22 @@ print(plist["name"])
 PY
   )"
 
-  out="$dist/$name.alfredworkflow"
+  # Named after the directory slug, not the display name: GitHub rewrites
+  # spaces in release asset filenames, which breaks checksum verification.
+  out="$dist/$slug.alfredworkflow"
   rm -f "$out"
-  # -X drops extra file attributes so builds of identical sources match.
-  (cd "$src" && zip --quiet -X --recurse-paths "$out" . --exclude '.DS_Store' '*/.DS_Store')
 
-  echo "built $(basename "$out")  <-  workflows/$slug"
+  # Build from a staging copy with a fixed mtime. zip records timestamps, so
+  # without this the same sources produce different bytes on every checkout.
+  stage="$(mktemp -d)"
+  trap 'rm -rf "$stage"' EXIT
+  cp -R "$src"/. "$stage"/
+  find "$stage" -name '.DS_Store' -delete
+  find "$stage" -exec touch -t 200001010000 {} +
+  # -X drops extra file attributes so builds of identical sources match.
+  (cd "$stage" && zip --quiet -X --recurse-paths "$out" .)
+  rm -rf "$stage"
+  trap - EXIT
+
+  echo "built $(basename "$out")  <-  $name"
 done

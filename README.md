@@ -18,7 +18,7 @@ yourself:
 
 ```sh
 ./build.sh
-open "dist/GitHub Pull Request.alfredworkflow"
+open dist/github-pull-request.alfredworkflow
 ```
 
 Workflows that need credentials or defaults expose them under the workflow's
@@ -37,8 +37,13 @@ workflows/
 
 A `.alfredworkflow` file is just a zip of that directory's contents, so it is a
 build artifact rather than source. `build.sh` validates each `info.plist` and
-zips it into `dist/`, naming the output after the workflow's `name` key. `dist/`
-is gitignored.
+zips it into `dist/` (gitignored), named after the directory slug — GitHub
+rewrites spaces in release asset filenames, which would break checksum
+verification. Alfred takes the workflow's display name from `info.plist`, so the
+file name does not matter on install.
+
+Builds are reproducible: the archive is made from a staging copy with a fixed
+mtime, so the same sources produce identical bytes on any machine.
 
 ## Editing
 
