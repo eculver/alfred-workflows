@@ -56,6 +56,27 @@ directory, so editing happens there and gets synced back here:
 Keeping the plist unpacked means changes show up as readable XML diffs instead
 of an opaque binary blob.
 
+## Development
+
+```sh
+./scripts/check.py                      # workflow integrity checks
+./tests/test_github_pull_request.py     # behavioural tests
+./build.sh                              # package into dist/
+```
+
+`scripts/check.py` validates every `info.plist`: required keys, reverse-dns
+bundle ids, connections that point at real object uids, embedded scripts that
+still parse, bundle ids and keywords that do not collide across workflows, and a
+README table that still mentions every workflow.
+
+The tests run a workflow's script filter the way Alfred does — bash, query split
+into argv, configuration supplied as environment variables — and assert on the
+Alfred JSON it returns.
+
+CI runs all of the above on pull requests and on `main`, plus `shellcheck` and
+`shfmt` over `build.sh`, `ruff` over the python, and `yamllint` over the Actions
+workflows. Tool versions are pinned so CI does not drift.
+
 ## Releasing
 
 Releases are cut by pushing a tag beginning with `v`, using a date plus a

@@ -1,0 +1,9 @@
+extends: default
+
+rules:
+  document-start: disable
+  line-length:
+    max: 100
+  truthy:
+    # GitHub Actions uses `on:` as a key, which yamllint reads as a boolean.
+    check-keys: false

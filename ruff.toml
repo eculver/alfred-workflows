@@ -1,0 +1,6 @@
+# Pinned so CI does not drift with ruff's defaults or any ambient config.
+line-length = 100
+target-version = "py39"
+
+[lint]
+select = ["E", "F", "W", "I", "B"]

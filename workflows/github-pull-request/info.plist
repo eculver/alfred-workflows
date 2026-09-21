@@ -78,7 +78,7 @@
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>/usr/bin/python3 - "$1" "$2" &lt;&lt;'PYEOF'
+				<string>/usr/bin/python3 - "$@" &lt;&lt;'PYEOF'
 import json, os, re, sys
 
 query = " ".join(sys.argv[1:]).strip()
@@ -106,6 +106,10 @@ number = parts[0].lstrip("#")
 if not number.isdigit():
     hint("'%s' is not a pull request number" % parts[0],
          "gh &lt;number&gt; [&lt;repo&gt;]   — defaults to %s" % default_repo)
+
+if len(parts) &gt; 2:
+    hint("Too many arguments",
+         "gh &lt;number&gt; [&lt;repo&gt;]   \u2014 defaults to %s" % default_repo)
 
 if len(parts) == 1:
     repo = default_repo

@@ -32,7 +32,8 @@ for slug in "${targets[@]}"; do
   fi
 
   # Validate, and read the display name that the built file is named after.
-  name="$(python3 - "$plist" <<'PY'
+  name="$(
+    python3 - "$plist" <<'PY'
 import plistlib, sys
 with open(sys.argv[1], "rb") as f:
     plist = plistlib.load(f)
@@ -41,7 +42,7 @@ for key in ("name", "bundleid"):
         sys.exit("info.plist is missing a %s" % key)
 print(plist["name"])
 PY
-)"
+  )"
 
   out="$dist/$name.alfredworkflow"
   rm -f "$out"

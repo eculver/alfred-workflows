@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint shell scripts
+        run: shellcheck build.sh
+
+      - name: Check shell formatting
+        run: |
+          curl -fsSL -o /tmp/shfmt \
+            https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64
+          chmod +x /tmp/shfmt
+          /tmp/shfmt --diff --indent 2 build.sh
+
+      - name: Lint python
+        run: |
+          python3 -m pip install --quiet ruff==0.16.8
+          ruff check scripts tests
+          ruff format --check scripts tests
+
+      - name: Lint workflow definitions
+        run: |
+          python3 -m pip install --quiet yamllint==1.38.0
+          yamllint --strict .github/workflows
+
+      - name: Check workflow integrity
+        run: ./scripts/check.py
+
+      - name: Test
+        run: tests/test_github_pull_request.py
+
+      - name: Build
+        run: ./build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alfred-workflows
+          path: dist/*.alfredworkflow
