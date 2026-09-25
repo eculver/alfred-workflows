@@ -55,6 +55,9 @@ PY
   trap 'rm -rf "$stage"' EXIT
   cp -R "$src"/. "$stage"/
   find "$stage" -name '.DS_Store' -delete
+  # README.md documents the workflow for this repo; it is not part of the
+  # workflow itself, so it does not belong in the installed bundle.
+  rm -f "$stage/README.md"
   find "$stage" -exec touch -t 200001010000 {} +
   # -X drops extra file attributes so builds of identical sources match.
   (cd "$stage" && zip --quiet -X --recurse-paths "$out" .)

@@ -193,15 +193,27 @@ PYEOF</string>
 		</dict>
 	</array>
 	<key>readme</key>
-	<string>Setup:
-1. Create a personal API key at linear.app/settings/account/security
+	<string>## Setup
+
+1. Create a personal API key at
+   [linear.app/settings/account/security](https://linear.app/settings/account/security)
 2. Open this workflow's Configuration in Alfred and paste the key.
 
-Usage:
-  li ENG-123      exact issue lookup
-  li billing bug  full-text search (top 8 results)
+## Usage
 
-Enter opens in browser. Cmd+Enter opens in the Linear desktop app. Shift = Quick Look.</string>
+    li ENG-123        exact issue lookup
+    li billing bug    full-text search (top 8)
+
+An issue ID is matched exactly and falls back to search if it does not exist.
+Searches need at least two characters.
+
+## Keys
+
+- **Enter** - open in the browser
+- **Cmd+Enter** - open in the Linear desktop app
+- **Cmd+C** - copy the issue URL
+- **Shift** - Quick Look
+</string>
 	<key>uidata</key>
 	<dict>
 		<key>A1B2C3D4-0001-4000-8000-000000000001</key>

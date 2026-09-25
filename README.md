@@ -7,8 +7,8 @@ versioned and easy to reinstall on a new machine.
 
 | Workflow | Keyword | Description |
 | --- | --- | --- |
-| Linear Issue | `li` | Look up a Linear issue by ID (`li ENG-123`) or full-text search, with a live preview. Enter opens in the browser, Cmd+Enter opens in Linear.app. Requires a Linear API key. |
-| GitHub Pull Request | `gh` | Jump to a pull request: `gh 1234`, `gh 1234 sfc_base_image`, or `gh 1234 eculver/foo`. A bare repo name is qualified with the default repository's owner. Configurable default repository. |
+| [Linear Issue](workflows/linear-issue/README.md) | `li` | Look up a Linear issue by ID (`li ENG-123`) or full-text search, with a live preview. Enter opens in the browser, Cmd+Enter opens in Linear.app. Requires a Linear API key. |
+| [GitHub Pull Request](workflows/github-pull-request/README.md) | `gh` | Jump to a pull request: `gh 1234`, `gh 1234 sfc_base_image`, or `gh 1234 eculver/foo`. A bare repo name is qualified with the default repository's owner. Configurable default repository. |
 
 ## Installing
 
@@ -31,12 +31,21 @@ Source lives unpacked under `workflows/`, one directory per workflow:
 
 ```
 workflows/
-  github-pull-request/info.plist
-  linear-issue/info.plist
+  github-pull-request/
+    info.plist      the workflow itself
+    README.md       full documentation for that workflow
+  linear-issue/
+    info.plist
+    README.md
 ```
 
-A `.alfredworkflow` file is just a zip of that directory's contents, so it is a
-build artifact rather than source. `build.sh` validates each `info.plist` and
+Each workflow's own README is the detailed reference — usage, every modifier
+key, configuration and edge cases. The table above is just the index. The
+README is repo documentation, so `build.sh` leaves it out of the packaged
+`.alfredworkflow`.
+
+A `.alfredworkflow` file is a zip of that directory, so it is a build artifact
+rather than source. `build.sh` validates each `info.plist` and
 zips it into `dist/` (gitignored), named after the directory slug — GitHub
 rewrites spaces in release asset filenames, which would break checksum
 verification. Alfred takes the workflow's display name from `info.plist`, so the
@@ -71,8 +80,14 @@ of an opaque binary blob.
 
 `scripts/check.py` validates every `info.plist`: required keys, reverse-dns
 bundle ids, connections that point at real object uids, embedded scripts that
-still parse, bundle ids and keywords that do not collide across workflows, and a
-README table that still mentions every workflow.
+still parse, bundle ids and keywords that do not collide across workflows, a
+README table that still mentions every workflow, and a per-workflow README with
+the expected heading and sections.
+
+It also lints the `readme` field inside each `info.plist`, which Alfred renders
+as Markdown in the workflow pane: lines indented one to three spaces get
+reflowed into a run-on paragraph, and underscores outside a code span render as
+emphasis, so `sfc_base_image` would appear as *sfc*base*image*.
 
 The tests run a workflow's script filter the way Alfred does — bash, query split
 into argv, configuration supplied as environment variables — and assert on the

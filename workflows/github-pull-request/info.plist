@@ -189,19 +189,38 @@ PYEOF</string>
 		</dict>
 	</array>
 	<key>readme</key>
-	<string>Usage:
-  gh 1234                    https://github.com/sfcompute/sfcompute/pull/1234
-  gh 1234 sfc_base_image     https://github.com/sfcompute/sfc_base_image/pull/1234
-  gh 1234 eculver/foo        https://github.com/eculver/foo/pull/1234
+	<string>## Usage
 
-With no repo, the configured Default Repository is used. A bare repo name is
-qualified with the owner of the Default Repository. An owner/repo argument is
-used as-is.
+    gh &lt;number&gt; [&lt;repo&gt;]
 
-Enter opens the pull request. Cmd+Enter opens its Files changed tab.
-Option+Enter opens the repo's pull request list. Cmd+C copies the URL.
+## Examples
 
-Set the Default Repository in this workflow's Configuration.</string>
+    gh 1234
+      -&gt; github.com/sfcompute/sfcompute/pull/1234
+
+    gh 1234 sfc_base_image
+      -&gt; github.com/sfcompute/sfc_base_image/pull/1234
+
+    gh 1234 eculver/foo
+      -&gt; github.com/eculver/foo/pull/1234
+
+With no repo, the configured **Default Repository** is used. A bare repo name
+is qualified with the owner of that default. An `owner/repo` argument is used
+as-is.
+
+## Keys
+
+- **Enter** - open the pull request
+- **Cmd+Enter** - open its Files changed tab
+- **Option+Enter** - open the repository's pull request list
+- **Cmd+C** - copy the URL
+- **Shift** - Quick Look
+
+## Setup
+
+Set **Default Repository** in this workflow's Configuration. It must be a full
+`owner/repo`, because the owner half is what resolves a bare repo name.
+</string>
 	<key>uidata</key>
 	<dict>
 		<key>B1C2D3E4-0001-4000-8000-000000000001</key>
